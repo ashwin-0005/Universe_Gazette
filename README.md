@@ -6,7 +6,7 @@ Type a "What if...?" and get the front page of a newspaper from that universe: h
 
 ```
 npm install
-echo ANTHROPIC_API_KEY=sk-ant-your-key > .env
+cp .env.example .env    # then open .env and paste your own key
 npm start
 ```
 
