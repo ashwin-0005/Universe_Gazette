@@ -232,3 +232,15 @@ figcaption { font-style: italic; font-size: .88rem; line-height: 1.25; padding: 
 #toast { position: fixed; z-index: 75; left: 50%; bottom: 76px; translate: -50% 20px; max-width: calc(100vw - 32px); padding: .6rem 1.1rem; background: var(--ink); color: #fff; font-family: var(--head); font-weight: 700; border: 2px solid var(--yellow); box-shadow: 4px 4px 0 var(--red); opacity: 0; pointer-events: none; transition: opacity .25s ease-out, translate .25s ease-out; text-align: center; }
 #toast.show { opacity: 1; translate: -50% 0; }
 @media print { #toast, #zoom { display: none !important; } }
+
+/* ================= M6: phone polish ================= */
+@media (max-width: 720px) {
+  #stage { padding-inline: 0; }
+  .stamp.shopped { right: 2%; bottom: 22%; }
+  .scoreboard span { font-size: .68rem; }
+  .actions .ink-btn { flex: 1 1 100%; }
+  .pop-breaking { font-size: .92rem; flex-wrap: wrap; gap: .3rem .6rem; }
+  .pop-cameo svg { width: 84px; }
+  .bubble { margin-bottom: 54px; }
+  #warp .flyer b { font-size: 1.7rem; }
+}

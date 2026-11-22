@@ -46,7 +46,7 @@ async function callClaude(model, prompt, system = SYSTEM, max_tokens = 8000) {
   const msg = await client.messages.create({
     model, max_tokens, system, output_config: { effort: 'low' },
     messages: [{ role: 'user', content: prompt }],
-  }, { timeout: 40000, maxRetries: 0 });
+  }, { timeout: system === SYSTEM ? 40000 : 20000, maxRetries: 0 });
   return msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
@@ -55,7 +55,8 @@ app.post('/api/generate', async (req, res) => {
   const prompt = buildPrompt(req.body);
   const t0 = Date.now();
   let lastErr;
-  for (const model of [MODEL, FALLBACK_MODEL, FALLBACK_MODEL]) {
+  // one try on the main model, then the faster fallback (the browser gives up at 50s)
+  for (const model of [MODEL, FALLBACK_MODEL]) {
     try {
       const data = parseJson(await callClaude(model, prompt));
       console.log(`generated with ${model} in ${((Date.now() - t0) / 1000).toFixed(1)}s`);

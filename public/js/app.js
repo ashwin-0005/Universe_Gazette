@@ -10,12 +10,14 @@ export const state = { premise: '', editions: [], index: 0, busy: false };
 const current = () => state.editions[state.index];
 const photosOf = ed => [ed.hero_photo, ...(ed.stories || []).map(s => s.photo), ed.cartoon].filter(Boolean);
 
-const post = (url, body) => fetch(url, {
-  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+const FALLBACK_COUNT = 3;      // public/data/fallback-1..N.json
+const GENERATE_TIMEOUT = 50000; // give up on the live presses after this
+const post = (url, body, ms = 45000) => fetch(url, {
+  method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(ms),
 });
 
 export async function generate(premise, extra = {}) {
-  const r = await post('/api/generate', { premise, ...extra });
+  const r = await post('/api/generate', { premise, ...extra }, GENERATE_TIMEOUT);
   const data = await r.json();
   if (!r.ok) throw new Error(data.error || 'Unknown error');
   return data;
@@ -25,7 +27,7 @@ export async function generate(premise, extra = {}) {
 export function loadPhotos(ed, onEach = () => {}) {
   return Promise.all(photosOf(ed).filter(p => p.svg === undefined).map(async p => {
     try {
-      const r = await post('/api/svg', { scene: p.scene || p.caption });
+      const r = await post('/api/svg', { scene: p.scene || p.caption }, 30000);
       p.svg = r.ok ? (await r.json()).svg : '';
     } catch { p.svg = ''; }
     onEach(p);
@@ -62,12 +64,36 @@ export function showPortal() {
   $('#premise').focus();
 }
 
+async function loadFallback() {
+  const n = 1 + Math.floor(Math.random() * FALLBACK_COUNT);
+  const r = await fetch(`data/fallback-${n}.json`);
+  if (!r.ok) throw new Error('no fallback');
+  return { ...(await r.json()), is_fallback: true };
+}
+
+// Live edition; a quick failure gets one automatic retry, then a saved edition so the demo never dies.
+async function fetchEdition(premise, extra, allowFallback) {
+  const t0 = Date.now();
+  try {
+    return await generate(premise, extra);
+  } catch (err) {
+    console.warn('generate failed:', err.message);
+    if (Date.now() - t0 < 20000) {
+      toast('The presses jammed! Re-inking...', 4000);
+      try { return await generate(premise, extra); } catch (e) { console.warn('retry failed:', e.message); }
+    }
+    if (!allowFallback) throw err;
+    toast('Live presses are down. Reprinting a classic edition...', 5000);
+    return loadFallback();
+  }
+}
+
 // Runs the warp while fetching; the warp always lasts at least 3 seconds.
-async function travel(premise, extra) {
+async function travel(premise, extra, allowFallback = true) {
   play('clack');
   startWarp();
   try {
-    const [ed] = await Promise.all([generate(premise, extra), delay(3000)]);
+    const [ed] = await Promise.all([fetchEdition(premise, extra, allowFallback), delay(3000)]);
     return ed;
   } finally {
     await stopWarp();
@@ -81,8 +107,9 @@ export async function visit(premise) {
   $('#status').textContent = '';
   try {
     const ed = await travel(premise);
-    Object.assign(state, { premise, editions: [ed], index: 0 });
+    Object.assign(state, { premise: ed.is_fallback ? ed.premise : premise, editions: [ed], index: 0 });
     showEdition(ed);
+    if (ed.is_fallback) toast('From the archive: ' + ed.premise, 5000);
   } catch (err) {
     if (!current()) showPortal();
     $('#status').textContent = 'The presses jammed: ' + err.message;
@@ -102,7 +129,7 @@ export async function fastForward() {
     await flipOut($('#gazette'));
     // drawings are large and not needed for continuity
     const previous = JSON.parse(JSON.stringify(current(), (k, v) => (k === 'svg' ? undefined : v)));
-    const ed = await travel(state.premise, { previous_edition: previous });
+    const ed = await travel(state.premise, { previous_edition: previous }, false);
     state.editions.push(ed);
     state.index = state.editions.length - 1;
     showEdition(ed, { flip: true });
