@@ -1,0 +1,6 @@
+body { margin: 0; background: #111; color: #eee; font-family: Georgia, serif; }
+#portal { max-width: 800px; margin: 0 auto; padding: 2rem 1rem; text-align: center; }
+#form { display: flex; gap: .5rem; }
+#form input { flex: 1; padding: .8rem; font-size: 1rem; }
+#form button { padding: .8rem 1.2rem; font-weight: bold; cursor: pointer; }
+#out { text-align: left; white-space: pre-wrap; font-size: .8rem; }
