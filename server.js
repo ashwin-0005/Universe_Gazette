@@ -11,6 +11,7 @@ if (!process.env.ANTHROPIC_API_KEY) console.warn('ANTHROPIC_API_KEY is not set i
 const client = new Anthropic();
 const app = express();
 app.disable('x-powered-by');
+app.set('trust proxy', 1); // behind Render's proxy: count each visitor by their real IP
 
 // Security headers: only our own scripts plus the pinned GSAP CDN may run
 app.use((req, res, next) => {
