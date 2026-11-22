@@ -1,5 +1,8 @@
 import { renderGazette, fillPhoto } from './render.js';
 import { startWarp, stopWarp, playEntrance, photoArrived, initTilt, requestSensors, delay } from './motion.js';
+import { play, initSound } from './sound.js';
+import { startPopups, stopPopups } from './popups.js';
+import { initChips } from './gestures.js';
 
 const $ = s => document.querySelector(s);
 export const state = { premise: '', edition: null, busy: false };
@@ -34,11 +37,14 @@ export function showEdition(ed) {
   renderGazette(ed, $('#gazette'));
   window.scrollTo(0, 0);
   playEntrance($('#gazette'));
+  play('rustle');
+  startPopups(ed);
   loadPhotos(ed, p => photoArrived(fillPhoto(p)));
   [ed.hero_photo, ...(ed.stories || []).map(s => s.photo), ed.cartoon].forEach(p => p?.svg && photoArrived(fillPhoto(p)));
 }
 
 export function showPortal() {
+  stopPopups();
   $('#stage').hidden = true;
   $('#portal').hidden = false;
   $('#status').textContent = '';
@@ -50,6 +56,7 @@ export async function visit(premise, extra = {}) {
   state.busy = true;
   state.premise = premise;
   $('#status').textContent = '';
+  play('clack');
   startWarp();
   try {
     // the warp always lasts at least 3 seconds
@@ -81,10 +88,12 @@ $('#gazette').addEventListener('click', e => {
     else navigator.clipboard?.writeText(text);
   }
   const fig = e.target.closest('.photo');
-  if (fig) fig.classList.toggle('flipped');
+  if (fig) { fig.classList.toggle('flipped'); play('rustle'); }
 });
 
 initTilt($('#gazette'));
+initSound();
+initChips($('#chips'), p => { $('#premise').value = p; requestSensors(); visit(p); });
 
 // ?demo=1 opens a saved edition straight away (offline preview)
 const demo = new URLSearchParams(location.search).get('demo');
