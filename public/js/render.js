@@ -42,6 +42,7 @@ export function fillPhoto(p) {
   if (svg) wrap.replaceChildren(svg);
   else wrap.innerHTML = '<div class="no-photo">PHOTO LOST<br>IN TRANSIT</div>';
   wrap.classList.add('arrived');
+  return fig;
 }
 
 const meter = (label, n) => `<div class="meter"><span>${label}</span><div class="meter-bar"><i style="--w:${Math.max(0, Math.min(100, +n || 0))}%"></i></div><b class="count" data-to="${+n || 0}">${+n || 0}</b></div>`;

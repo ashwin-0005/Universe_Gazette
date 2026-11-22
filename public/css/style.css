@@ -139,3 +139,45 @@ figcaption { font-style: italic; font-size: .88rem; line-height: 1.25; padding: 
 }
 
 @media print { body { background: #fff; } #portal, .actions { display: none !important; } #gazette { box-shadow: none; clip-path: none; } }
+
+/* ================= M3: portal, warp, 3D ================= */
+#portal { position: relative; overflow: hidden; }
+#portal > * { position: relative; z-index: 1; }
+.vortex { position: absolute !important; z-index: 0 !important; left: 50%; top: 50%; width: min(120vw, 760px); aspect-ratio: 1; translate: -50% -50%; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from 0deg, #7c5cff, #19e3ff, #ff3ea5, #f6c51c, #7c5cff); filter: blur(28px); opacity: .75; animation: spin 7s linear infinite;
+  -webkit-mask-image: radial-gradient(closest-side, transparent 38%, #000 62%, transparent 100%); mask-image: radial-gradient(closest-side, transparent 38%, #000 62%, transparent 100%); }
+.vortex.v2 { width: min(80vw, 480px); animation-duration: 4s; animation-direction: reverse; opacity: .6; filter: blur(14px); }
+@keyframes spin { to { rotate: 360deg; } }
+#portal h1 { text-shadow: 0 0 30px #7c5cff, 0 2px 0 #000; }
+#form input:focus-visible { outline: 3px solid #19e3ff; outline-offset: 2px; }
+#form button { transition: transform .15s ease-out; box-shadow: 0 0 24px #f6c51c88; }
+#form button:active { transform: scale(.96); }
+
+#warp { position: fixed; inset: 0; z-index: 50; background: radial-gradient(circle, #2a1b6b, #0d0b14 70%); display: grid; place-content: center; overflow: hidden; perspective: 600px; }
+.tunnel { position: absolute; inset: 0; transform-style: preserve-3d; }
+.tunnel > div { position: absolute; left: 50%; top: 50%; margin: -70px 0 0 -50px; animation: fly 2.4s linear infinite; will-change: transform, opacity; }
+.page { width: 100px; height: 140px; background: repeating-linear-gradient(#efe6d0 0 9px, #bdb193 9px 11px); border-top: 22px solid #1b1712; box-shadow: 0 0 20px #0008; }
+.flyer b { display: block; width: max-content; translate: -30% 0; font-family: var(--display); font-weight: 400; font-size: 2.6rem; color: var(--yellow); text-shadow: 3px 3px 0 var(--red); white-space: nowrap; }
+@keyframes fly {
+  from { transform: translate3d(calc(var(--x) * .1), calc(var(--y) * .1), -1800px) rotate(0); opacity: 0; }
+  15% { opacity: 1; }
+  to { transform: translate3d(var(--x), var(--y), 560px) rotate(var(--r)); opacity: 1; }
+}
+#warp-msg { position: relative; font-family: var(--display); font-size: clamp(1.5rem, 5vw, 2.6rem); color: #fff; text-align: center; padding: 0 1rem; text-shadow: 0 0 24px #19e3ff, 0 3px 0 #000; }
+
+#ink-bar { position: fixed; z-index: 40; top: 0; left: 0; right: 0; height: 7px; background: linear-gradient(90deg, var(--ink), var(--red)); transform-origin: 0 50%; transform: scaleX(0); box-shadow: 0 2px 6px #0008; }
+
+/* Paper moves to a pseudo-element so the page itself can hold real 3D depth */
+#gazette { background: none; box-shadow: none; clip-path: none; transform-style: preserve-3d; z-index: 0; --gy: 0px; }
+#gazette::before { content: ''; position: absolute; inset: 0; z-index: -1; transform: translateZ(-1px);
+  background: var(--grain) 0 var(--gy), radial-gradient(ellipse at 20% 10%, #f7efdc, transparent 60%), linear-gradient(175deg, var(--paper), var(--paper-dark));
+  clip-path: polygon(0 .3%, 3% 0, 8% .25%, 15% 0, 24% .2%, 33% 0, 45% .25%, 56% 0, 67% .2%, 78% 0, 88% .25%, 96% 0, 100% .25%, 100% 99.75%, 96% 100%, 87% 99.8%, 76% 100%, 64% 99.75%, 52% 100%, 41% 99.8%, 30% 100%, 19% 99.75%, 9% 100%, 3% 99.8%, 0 100%); }
+#gazette::after { content: ''; position: absolute; inset: 14px; z-index: -2; transform: translateZ(-2px); box-shadow: 0 30px 80px 10px #000c; }
+.panel, .stories, .story, .hero, .banner, .masthead { transform-style: preserve-3d; }
+.title .word { display: inline-block; white-space: nowrap; }
+.title .ch, .story-text .w { display: inline-block; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+@media print { #warp, #ink-bar { display: none !important; } #gazette::before { clip-path: none; } }

@@ -1,4 +1,5 @@
 import { renderGazette, fillPhoto } from './render.js';
+import { startWarp, stopWarp, playEntrance, photoArrived, initTilt, requestSensors, delay } from './motion.js';
 
 const $ = s => document.querySelector(s);
 export const state = { premise: '', edition: null, busy: false };
@@ -32,7 +33,9 @@ export function showEdition(ed) {
   $('#stage').hidden = false;
   renderGazette(ed, $('#gazette'));
   window.scrollTo(0, 0);
-  loadPhotos(ed, fillPhoto);
+  playEntrance($('#gazette'));
+  loadPhotos(ed, p => photoArrived(fillPhoto(p)));
+  [ed.hero_photo, ...(ed.stories || []).map(s => s.photo), ed.cartoon].forEach(p => p?.svg && photoArrived(fillPhoto(p)));
 }
 
 export function showPortal() {
@@ -46,10 +49,15 @@ export async function visit(premise, extra = {}) {
   if (state.busy) return;
   state.busy = true;
   state.premise = premise;
-  $('#status').textContent = 'Printing the ink...';
+  $('#status').textContent = '';
+  startWarp();
   try {
-    showEdition(await generate(premise, extra));
+    // the warp always lasts at least 3 seconds
+    const [ed] = await Promise.all([generate(premise, extra), delay(3000)]);
+    await stopWarp();
+    showEdition(ed);
   } catch (err) {
+    await stopWarp();
     $('#status').textContent = 'The presses jammed: ' + err.message;
   } finally {
     state.busy = false;
@@ -58,6 +66,7 @@ export async function visit(premise, extra = {}) {
 
 $('#form').addEventListener('submit', e => {
   e.preventDefault();
+  requestSensors();
   visit($('#premise').value.trim() || $('#premise').placeholder);
 });
 
@@ -74,6 +83,8 @@ $('#gazette').addEventListener('click', e => {
   const fig = e.target.closest('.photo');
   if (fig) fig.classList.toggle('flipped');
 });
+
+initTilt($('#gazette'));
 
 // ?demo=1 opens a saved edition straight away (offline preview)
 const demo = new URLSearchParams(location.search).get('demo');
