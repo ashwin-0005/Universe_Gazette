@@ -19,7 +19,7 @@ const post = (url, body, ms = 45000) => fetch(url, {
 export async function generate(premise, extra = {}) {
   const r = await post('/api/generate', { premise, ...extra }, GENERATE_TIMEOUT);
   const data = await r.json();
-  if (!r.ok) throw new Error(data.error || 'Unknown error');
+  if (!r.ok) throw Object.assign(new Error(data.error || 'Unknown error'), { status: r.status });
   return data;
 }
 
@@ -78,6 +78,11 @@ async function fetchEdition(premise, extra, allowFallback) {
     return await generate(premise, extra);
   } catch (err) {
     console.warn('generate failed:', err.message);
+    if (err.status === 429) { // out of editions: no retry, straight to the archive
+      if (!allowFallback) throw err;
+      toast('You have printed all 5 of your editions. Here is one from the archive.', 6000);
+      return loadFallback();
+    }
     if (Date.now() - t0 < 20000) {
       toast('The presses jammed! Re-inking...', 4000);
       try { return await generate(premise, extra); } catch (e) { console.warn('retry failed:', e.message); }
@@ -109,7 +114,7 @@ export async function visit(premise) {
     const ed = await travel(premise);
     Object.assign(state, { premise: ed.is_fallback ? ed.premise : premise, editions: [ed], index: 0 });
     showEdition(ed);
-    if (ed.is_fallback) toast('From the archive: ' + ed.premise, 5000);
+    if (ed.is_fallback) setTimeout(() => toast('From the archive: ' + ed.premise, 5000), 3500);
   } catch (err) {
     if (!current()) showPortal();
     $('#status').textContent = 'The presses jammed: ' + err.message;
@@ -134,9 +139,9 @@ export async function fastForward() {
     state.index = state.editions.length - 1;
     showEdition(ed, { flip: true });
     toast(`${state.index * 10} years later... (swipe right to go back)`);
-  } catch {
+  } catch (err) {
     showEdition(current());
-    toast('The future is unavailable right now. Try again.');
+    toast(err.status === 429 ? 'You have printed all 5 of your editions.' : 'The future is unavailable right now. Try again.');
   } finally {
     state.busy = false;
   }

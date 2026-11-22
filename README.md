@@ -57,6 +57,6 @@ Then raise `FALLBACK_COUNT` in `public/js/app.js`.
 ## Security notes
 
 - The API key lives only in `.env`, which is git-ignored. Copy `.env.example` to `.env` and add your own key. Never commit `.env`.
-- The server sends a Content-Security-Policy, pins the GSAP CDN files with integrity hashes, limits request size, validates input, and rate-limits each visitor (8 editions and 50 drawings per minute).
+- The server sends a Content-Security-Policy, pins the GSAP CDN files with integrity hashes, limits request size, validates input, and limits each visitor to 5 editions in total (Fast-forward counts as one; resets when the server restarts; the host machine itself is exempt) and 50 drawings per minute.
 - Everything Claude returns is escaped before it reaches the page, and drawings pass through an SVG sanitizer (`sanitizeSvg` in `public/js/render.js`). `tools/test-xss.js` feeds the renderer a hostile edition to check this.
 - There is no login. Anyone who can reach the server can spend your API credits up to the rate limit, so run it on a network you trust and do not expose it to the internet as is.

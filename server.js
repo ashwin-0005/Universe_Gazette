@@ -26,16 +26,21 @@ app.use(express.json({ limit: '50kb' }));
 app.use(express.static('public', { dotfiles: 'ignore' }));
 
 // Each visitor (by IP) gets a small budget, so nobody on the network can burn the API credits
-function rateLimit(max, windowMs = 60000) {
+// windowMs = 0 means the count never resets (until the server restarts).
+// The host machine itself (localhost) is exempt, so the presenter is never locked out.
+const isHost = ip => ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(ip);
+function rateLimit(max, windowMs, message) {
   const hits = new Map();
-  setInterval(() => hits.clear(), windowMs).unref();
+  if (windowMs) setInterval(() => hits.clear(), windowMs).unref();
   return (req, res, next) => {
+    if (isHost(req.ip)) return next();
     const n = (hits.get(req.ip) || 0) + 1;
     hits.set(req.ip, n);
-    if (n > max) return res.status(429).json({ error: 'The presses are overheating. Wait a minute.' });
+    if (n > max) return res.status(429).json({ error: message });
     next();
   };
 }
+const EDITIONS_PER_VISITOR = 5;
 const clean = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max) : '');
 
 const SYSTEM = `You are the editor of a newspaper from a parallel universe. Given a "what if" premise, write that universe's front page.
@@ -76,7 +81,7 @@ async function callClaude(model, prompt, system = SYSTEM, max_tokens = 8000) {
   return msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
-app.post('/api/generate', rateLimit(8), async (req, res) => {
+app.post('/api/generate', rateLimit(EDITIONS_PER_VISITOR, 0, 'You have printed all 5 of your editions.'), async (req, res) => {
   const premise = clean(req.body?.premise, 300);
   if (!premise) return res.status(400).json({ error: 'premise required' });
   const prev = req.body.previous_edition;
@@ -98,7 +103,7 @@ app.post('/api/generate', rateLimit(8), async (req, res) => {
   res.status(502).json({ error: 'The presses jammed. Please try again.' });
 });
 
-app.post('/api/svg', rateLimit(50), async (req, res) => {
+app.post('/api/svg', rateLimit(50, 60000, 'The presses are overheating. Wait a minute.'), async (req, res) => {
   const scene = clean(req.body?.scene, 500);
   if (!scene) return res.status(400).json({ error: 'scene required' });
   for (const model of [SVG_MODEL, FALLBACK_MODEL]) {
