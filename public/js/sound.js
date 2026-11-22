@@ -48,4 +48,5 @@ export function initSound() {
     play('pop');
   });
   document.addEventListener('gazette:stamp', () => play('thud'));
+  document.addEventListener('gazette:flip', () => play('rustle'));
 }

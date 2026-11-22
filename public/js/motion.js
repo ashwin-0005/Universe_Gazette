@@ -64,14 +64,15 @@ function countUp(el) {
 }
 
 /* ---------- Entrance + scroll ---------- */
-export function playEntrance(root) {
+export function playEntrance(root, { flip = false } = {}) {
   if (reduced) return;
   ScrollTrigger.getAll().forEach(t => t.kill());
   gsap.killTweensOf(root);
   gsap.set(root, { clearProps: 'transform,opacity' });
 
   // The paper drops in, then unfolds panel by panel
-  gsap.from(root, { y: -innerHeight, rotationX: 55, scale: .55, opacity: 0, duration: .8, ease: 'back.out(1.1)', transformPerspective: 1400, transformOrigin: '50% 0' });
+  if (flip) gsap.from(root, { rotationY: 95, opacity: 0, duration: .7, ease: 'back.out(1.2)', transformPerspective: 1400, transformOrigin: `0 ${innerHeight / 2}px` });
+  else gsap.from(root, { y: -innerHeight, rotationX: 55, scale: .55, opacity: 0, duration: .8, ease: 'back.out(1.1)', transformPerspective: 1400, transformOrigin: '50% 0' });
   gsap.from(root.querySelectorAll('.panel'), { rotationX: -92, opacity: 0, transformOrigin: '50% 0', transformPerspective: 900, duration: .65, ease: 'back.out(1.5)', stagger: .11, delay: .45, clearProps: 'transform,opacity' });
 
   // Masthead letters bounce in
@@ -122,6 +123,14 @@ export function playEntrance(root) {
   // re-measure once the drop-in has settled and fonts are in
   gsap.delayedCall(2.4, () => ScrollTrigger.refresh());
   document.fonts?.ready.then(() => ScrollTrigger.refresh());
+}
+
+// The page turns away like a leaf of a book (dir +1 = forward, -1 = back)
+export function flipOut(root, dir = 1) {
+  if (reduced) return Promise.resolve();
+  document.dispatchEvent(new CustomEvent('gazette:flip'));
+  return gsap.to(root, { rotationY: -95 * dir, opacity: 0, duration: .5, ease: 'power2.in', transformPerspective: 1400,
+    transformOrigin: `${dir > 0 ? 0 : 100}% ${scrollY + innerHeight / 2 - root.offsetTop}px` }).then(() => {});
 }
 
 // Called when a photo's drawing arrives. The cartoon assembles itself shape by shape on scroll.
