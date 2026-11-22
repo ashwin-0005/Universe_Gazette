@@ -9,20 +9,32 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Caveat:wght@500;700&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/landing.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
 </head>
 <body>
 <div id="ink-bar"></div>
 <main id="portal">
-  <div class="vortex"></div><div class="vortex v2"></div>
-  <h1>Which universe shall we visit today?</h1>
-  <form id="form">
-    <input id="premise" maxlength="300" placeholder="What if Bhopal became the capital of India?" autocomplete="off" enterkeyhint="go">
-    <button>Enter Universe</button>
-  </form>
-  <div id="chips"></div>
-  <div id="status" role="status"></div>
+  <div class="lp-scene" aria-hidden="true"></div>
+  <header class="lp-head">
+    <span class="lp-stamp">BREAKING: YOU ARE HERE</span>
+    <h1 class="lp-title">The Parallel Universe Gazette</h1>
+    <p class="lp-tagline"><span id="lp-type">All the news that's fit to imagine.</span></p>
+  </header>
+  <div class="lp-gap"></div>
+  <div class="lp-controls">
+    <label class="lp-ask" for="premise">Which universe shall we visit today?</label>
+    <form id="form">
+      <span class="lp-field">
+        <input id="premise" maxlength="300" placeholder="What if Bhopal became the capital of India?" autocomplete="off" enterkeyhint="go">
+        <i class="lp-caret"></i>
+      </span>
+      <button>Enter Universe</button>
+    </form>
+    <div id="chips"></div>
+    <div id="status" role="status"></div>
+  </div>
 </main>
 <div id="warp" hidden><div class="tunnel"></div><div id="warp-msg" role="status"></div></div>
 <div id="popup-layer"></div>
@@ -31,5 +43,6 @@
 <button id="mute" aria-label="Mute sound"></button>
 <div id="stage" hidden><div id="gazette"></div></div>
 <script type="module" src="js/app.js"></script>
+<script type="module" src="js/landing.js"></script>
 </body>
 </html>

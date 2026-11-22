@@ -1,0 +1,137 @@
+/* ============================================================
+   Landing page ("Portal") only. Loaded after style.css.
+   Sections: layout, portal, floating objects, text, input area,
+   interactions, transition, phone, reduced motion.
+   ============================================================ */
+
+/* ---------- Layout ---------- */
+#portal {
+  --cream: #f4ead2; --lp-red: #e0261f; --lp-yellow: #f6c51c;
+  --ps: min(82vmin, 640px); /* portal size */
+  display: flex; flex-direction: column; align-items: center; gap: 0;
+  height: 100dvh; min-height: 0; padding: clamp(.8rem, 3vh, 2rem) 1rem clamp(.8rem, 2.5vh, 1.6rem);
+  overflow: hidden; color: var(--cream);
+  background: radial-gradient(ellipse at 50% 55%, #2b1a66 0%, #170f3d 45%, #0a0818 100%);
+}
+#portal > .lp-scene { position: absolute; inset: 0; z-index: 0; perspective: 900px; pointer-events: none; }
+#portal > .lp-head, #portal > .lp-controls { z-index: 2; pointer-events: none; }
+#portal > .lp-gap { flex: 1 1 0; min-height: 0; }
+.lp-controls > *, .lp-controls #form > * { pointer-events: auto; }
+.lp-controls { display: grid; gap: clamp(.5rem, 1.6vh, .9rem); justify-items: center; width: min(760px, 100%); }
+
+/* ---------- Background: star dust and ink drops (3 parallax layers) ---------- */
+.lp-dust { position: absolute; inset: -6%; overflow: hidden; }
+.lp-dust i { position: absolute; left: 0; top: 0; width: 100%; height: 200%; animation: lp-rise linear infinite; }
+.lp-dust.d1 i { animation-duration: 90s; opacity: .55;
+  background-image: radial-gradient(1.2px 1.2px at 12% 8%, #fff 99%, transparent), radial-gradient(1px 1px at 62% 21%, #fff 99%, transparent), radial-gradient(1.4px 1.4px at 84% 37%, #cfd6ff 99%, transparent), radial-gradient(1px 1px at 33% 44%, #fff 99%, transparent), radial-gradient(1.2px 1.2px at 47% 12%, #fff 99%, transparent), radial-gradient(1px 1px at 91% 5%, #fff 99%, transparent), radial-gradient(1.3px 1.3px at 5% 30%, #cfd6ff 99%, transparent), radial-gradient(1px 1px at 73% 47%, #fff 99%, transparent);
+  background-size: 100% 50%; }
+.lp-dust.d2 i { animation-duration: 55s; opacity: .8;
+  background-image: radial-gradient(2.2px 2.2px at 20% 15%, var(--lp-yellow) 99%, transparent), radial-gradient(2px 2px at 78% 9%, var(--cream) 99%, transparent), radial-gradient(2.4px 2.4px at 55% 33%, #fff 99%, transparent), radial-gradient(2px 2px at 8% 41%, var(--cream) 99%, transparent), radial-gradient(2.2px 2.2px at 93% 28%, var(--lp-yellow) 99%, transparent), radial-gradient(2px 2px at 38% 3%, #fff 99%, transparent);
+  background-size: 100% 50%; }
+.lp-dust.d3 i { animation-duration: 32s; opacity: .85;
+  background-image: radial-gradient(5px 7px at 15% 22%, var(--lp-red) 98%, transparent), radial-gradient(4px 6px at 82% 12%, var(--lp-yellow) 98%, transparent), radial-gradient(6px 8px at 66% 40%, var(--lp-red) 98%, transparent), radial-gradient(4px 5px at 30% 46%, var(--cream) 98%, transparent), radial-gradient(5px 7px at 95% 44%, var(--lp-red) 98%, transparent), radial-gradient(4px 6px at 4% 6%, var(--lp-yellow) 98%, transparent);
+  background-size: 100% 50%; }
+@keyframes lp-rise { to { transform: translate3d(0, -50%, 0); } }
+
+/* ---------- Portal: stacked rings in real 3D ---------- */
+.lp-world { position: absolute; inset: 0; transform-style: preserve-3d; }
+.lp-portal { position: absolute; left: 50%; top: 43%; width: var(--ps); height: var(--ps); margin: calc(var(--ps) / -2) 0 0 calc(var(--ps) / -2); transform-style: preserve-3d; }
+.lp-tilt { position: absolute; inset: 0; transform-style: preserve-3d; transform: rotateX(50deg); }
+.lp-glow { position: absolute; inset: -22%; border-radius: 50%; transform: translateZ(-380px);
+  background: radial-gradient(closest-side, #ff3ea566 0%, #7c5cff55 35%, #19e3ff22 60%, transparent 75%); }
+.lp-ring { position: absolute; left: 50%; top: 50%; width: var(--s); height: var(--s); margin: calc(var(--s) / -2) 0 0 calc(var(--s) / -2); border-radius: 50%;
+  transform: translateZ(var(--z)); animation: lp-spin var(--t) linear infinite var(--dir, normal);
+  background: conic-gradient(from var(--a, 0deg), var(--c1), var(--c2), var(--c3), var(--c1) 55%, var(--c2), var(--c3), var(--c1));
+  -webkit-mask-image: radial-gradient(closest-side, transparent 80%, #000 83%, #000 96%, transparent 100%);
+  mask-image: radial-gradient(closest-side, transparent 80%, #000 83%, #000 96%, transparent 100%);
+  filter: drop-shadow(0 0 10px var(--c1)); }
+@keyframes lp-spin { to { rotate: 360deg; } }
+.lp-core { position: absolute; left: 50%; top: 50%; width: 24%; height: 24%; margin: -12% 0 0 -12%; border-radius: 50%; transform: translateZ(-360px);
+  background: radial-gradient(circle, #fff 0%, #fff6c9 22%, var(--lp-yellow) 44%, #ff3ea5aa 62%, transparent 74%); animation: lp-breathe 3.2s ease-in-out infinite; }
+@keyframes lp-breathe { 50% { scale: 1.22; opacity: .85; } }
+/* sparkles: each arm spins, its dot sits out on the radius */
+.lp-spark { position: absolute; left: 50%; top: 50%; width: 0; height: 0; transform: translateZ(var(--z)); animation: lp-spin var(--t) linear infinite var(--dir, normal); }
+.lp-spark::after { content: ''; position: absolute; left: var(--r); top: 0; width: var(--d, 6px); height: var(--d, 6px); margin: calc(var(--d, 6px) / -2); border-radius: 50%; background: var(--c, #fff); box-shadow: 0 0 10px 2px var(--c, #fff); }
+.lp-hit { position: absolute; left: 50%; top: 43%; width: calc(var(--ps) * .5); height: calc(var(--ps) * .34); translate: -50% -50%; border-radius: 50%; pointer-events: auto; cursor: pointer; }
+.lp-wave { position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; margin: -15% 0 0 -15%; border-radius: 50%; border: 6px solid var(--cream); box-shadow: 0 0 24px var(--lp-yellow), inset 0 0 24px var(--lp-red); pointer-events: none; }
+
+/* ---------- Floating objects: newspaper pages and stickers ---------- */
+.lp-slot { position: absolute; left: var(--x); top: var(--y); width: 0; height: 0; transform-style: preserve-3d; pointer-events: auto; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.lp-slot.dragging { cursor: grabbing; }
+.lp-float { position: absolute; transform-style: preserve-3d; animation: lp-drift var(--dur) ease-in-out var(--del) infinite alternate; }
+@keyframes lp-drift {
+  from { transform: translate3d(-8px, -14px, 0) rotateX(var(--rx)) rotateY(var(--ry)) rotateZ(var(--rz)); }
+  to { transform: translate3d(8px, 14px, 0) rotateX(calc(var(--rx) * -1)) rotateY(calc(var(--ry) * -.7)) rotateZ(calc(var(--rz) * -1)); }
+}
+.lp-page { width: 96px; height: 128px; margin: -64px 0 0 -48px; padding: 7px 7px 0; background: var(--cream); color: #1b1712; border-top: 14px solid #1b1712; box-shadow: 0 10px 24px #0009; font: 900 9.5px/1.05 'Playfair Display', Georgia, serif; text-align: center; }
+.lp-page b { display: block; letter-spacing: .02em; }
+.lp-page span { display: block; font-size: 30px; line-height: 1.25; }
+.lp-page::after { content: ''; display: block; height: 34px; background: repeating-linear-gradient(#1b171255 0 2px, transparent 2px 7px); }
+.lp-sticker { width: 64px; height: 64px; margin: -32px 0 0 -32px; display: grid; place-content: center; font-size: 34px; line-height: 1; border-radius: 50%; background: var(--cream); border: 3px solid #1b1712; box-shadow: 4px 4px 0 var(--lp-red); }
+.lp-sticker.alt { background: var(--lp-yellow); box-shadow: 4px 4px 0 #1b1712; }
+
+/* ---------- Title, tagline, stamp ---------- */
+.lp-head { text-align: center; max-width: 100%; }
+#portal .lp-title { font-family: 'Abril Fatface', Georgia, serif; font-weight: 400; font-size: clamp(1.9rem, 6vw, 4.2rem); line-height: 1; margin: 0; color: var(--cream); text-shadow: .035em .035em 0 var(--lp-red), .075em .075em 0 var(--lp-yellow), 0 0 40px #7c5cffaa; text-wrap: balance; }
+.lp-title .lw { display: inline-block; white-space: nowrap; }
+.lp-title .lc { display: inline-block; }
+.lp-title.wave .lc { animation: lp-wave 2.8s ease-in-out calc(var(--i) * 70ms) infinite; }
+@keyframes lp-wave { 50% { transform: translateY(-5px) rotate(-2deg); } }
+.lp-tagline { margin: clamp(.4rem, 1.4vh, .8rem) 0 0; min-height: 1.5em; font: italic 400 clamp(.95rem, 2.4vw, 1.25rem)/1.3 'Old Standard TT', Georgia, serif; color: #e9defd; }
+.lp-tagline::after { content: ''; display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -.12em; background: var(--lp-yellow); animation: lp-blink .8s steps(2) infinite; }
+@keyframes lp-blink { 50% { opacity: 0; } }
+.lp-stamp { display: inline-block; margin-bottom: clamp(.3rem, 1vh, .6rem); padding: .2em .7em; rotate: -4deg; font: 900 clamp(.62rem, 1.5vw, .82rem)/1.2 'Playfair Display', Georgia, serif; letter-spacing: .16em; color: #1b1712; background: var(--lp-yellow); border: 3px solid #1b1712; box-shadow: 3px 3px 0 var(--lp-red); }
+
+/* ---------- Input area (same elements, new clothes) ---------- */
+.lp-ask { font: italic 700 clamp(.95rem, 2.2vw, 1.15rem)/1.2 'Playfair Display', Georgia, serif; color: var(--cream); text-shadow: 0 2px 0 #000; }
+#portal #form { display: flex; align-items: stretch; gap: .9rem; width: min(720px, 100%); margin: 0; }
+.lp-field { position: relative; flex: 1; min-width: 0; display: block; rotate: -1.2deg; }
+#portal #form input { width: 100%; height: 100%; min-height: 58px; padding: .8rem 1rem .8rem 1.5rem; font: 700 clamp(16px, 2.2vw, 1.15rem)/1.2 'Old Standard TT', Georgia, serif; color: #1b1712; caret-color: var(--lp-red); background: var(--cream); border: 4px solid #1b1712; border-radius: 6px; box-shadow: 6px 6px 0 var(--lp-red), 6px 6px 0 2px #1b1712; }
+#portal #form input::placeholder { color: #6b5f4d; font-weight: 400; font-style: italic; }
+#portal #form input:focus-visible { outline: 3px solid var(--lp-yellow); outline-offset: 3px; }
+.lp-field:focus-within { animation: lp-wiggle .5s ease-in-out; }
+@keyframes lp-wiggle { 20% { rotate: 1.4deg; } 45% { rotate: -2.6deg; } 70% { rotate: .4deg; } }
+/* blinking ink cursor, shown until the real caret takes over */
+.lp-caret { position: absolute; left: .8rem; top: 50%; width: 4px; height: 1.5em; margin-top: -.75em; border-radius: 2px; background: var(--lp-red); animation: lp-blink .9s steps(2) infinite; pointer-events: none; }
+.lp-field:focus-within .lp-caret, .lp-field input:not(:placeholder-shown) + .lp-caret { display: none; }
+#portal #form button { position: relative; flex: none; min-height: 58px; padding: .7rem 1.6rem; font: 400 clamp(1.05rem, 2.4vw, 1.4rem)/1 'Abril Fatface', Georgia, serif; letter-spacing: .02em; color: #fff; background: var(--lp-red); border: 4px solid #1b1712; border-radius: 10px; box-shadow: 6px 6px 0 var(--lp-yellow), 6px 6px 0 3px #1b1712; rotate: 1.5deg; animation: lp-pulse 2.2s ease-in-out infinite; transition: rotate .2s cubic-bezier(.3, 1.6, .5, 1), transform .12s ease-out, box-shadow .12s ease-out; }
+@keyframes lp-pulse { 50% { scale: 1.045; } }
+@media (hover: hover) { #portal #form button:hover { rotate: -3deg; } }
+#portal #form button:active { transform: translate(5px, 5px) scale(.94, .9); box-shadow: 1px 1px 0 var(--lp-yellow), 1px 1px 0 3px #1b1712; }
+/* preset chips become sticker bubbles (behaviour unchanged) */
+#portal #chips { gap: .55rem .6rem; width: 100%; }
+#portal .chip { min-height: 40px; padding: .4rem .9rem; font: 700 .86rem/1.15 'Old Standard TT', Georgia, serif; color: #1b1712; background: var(--cream); border: 3px solid #1b1712; border-radius: 999px; box-shadow: 3px 3px 0 var(--lp-red); transition: scale .2s cubic-bezier(.3, 1.6, .5, 1); }
+#portal .chip:nth-child(even) { background: var(--lp-yellow); border-color: #1b1712; box-shadow: 3px 3px 0 #1b1712; }
+#portal .chip:nth-child(3n) { background: #ffd9d4; }
+@media (hover: hover) { #portal .chip:hover { scale: 1.08; animation-play-state: paused; rotate: calc(var(--tilt) * -2); } }
+#portal .chip:active { scale: .94; }
+#portal .chip.dragging { background: #fff; }
+#portal #status { min-height: 1.2em; font-size: .9rem; color: #ffd9d4; }
+
+/* ---------- Interactions: ink splat from the button ---------- */
+.lp-ink { position: fixed; z-index: 45; left: 0; top: 0; width: 12px; height: 12px; margin: -6px; border-radius: 50% 60% 45% 55%; background: var(--c, #e0261f); pointer-events: none; }
+
+/* ---------- Transition into the Warp ---------- */
+#lp-flash { position: fixed; inset: 0; z-index: 55; background: #fff; opacity: 0; pointer-events: none; }
+/* hold the Warp back for the 1-second suck-in; it is already running underneath */
+body.lp-exit #warp { visibility: hidden; }
+
+/* ---------- Phone ---------- */
+@media (max-width: 720px) {
+  #portal { --ps: min(118vw, 62vh); padding-bottom: 68px; }
+  .lp-page { scale: .72; } .lp-sticker { scale: .78; }
+  .lp-slot.extra { display: none; }
+  .lp-ring { filter: none; }
+  #portal #form { flex-direction: column; gap: .8rem; }
+  #portal #form button { align-self: center; padding-inline: 2.2rem; }
+  #portal #chips { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; }
+  #portal .chip { min-height: 44px; padding: .3rem .5rem; font-size: .74rem; }
+  .lp-ask { display: none; }
+}
+@media (max-height: 640px) and (min-width: 721px) { .lp-ask { display: none; } #portal .chip { min-height: 36px; font-size: .8rem; } }
+
+/* ---------- Reduced motion: a calm still portal ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .lp-slot { cursor: default; }
+  .lp-tagline::after, .lp-caret { display: none; }
+}
