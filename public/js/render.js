@@ -9,11 +9,11 @@ export function sanitizeSvg(svg) {
   const doc = new DOMParser().parseFromString(String(svg || ''), 'image/svg+xml');
   const root = doc.documentElement;
   if (!root || root.nodeName !== 'svg' || doc.querySelector('parsererror')) return null;
-  root.querySelectorAll('script, foreignObject, iframe, image, use[href^="http"], a').forEach(n => n.remove());
-  root.querySelectorAll('*').forEach(n => {
+  root.querySelectorAll('script, style, foreignObject, iframe, image, a, animate, set, animateTransform, animateMotion, feImage').forEach(n => n.remove());
+  [root, ...root.querySelectorAll('*')].forEach(n => {
     for (const a of [...n.attributes]) {
       const v = a.value.trim().toLowerCase();
-      if (a.name.startsWith('on') || ((a.name === 'href' || a.name === 'xlink:href') && !v.startsWith('#')) || v.includes('javascript:')) n.removeAttribute(a.name);
+      if (a.name.startsWith('on') || ((a.name === 'href' || a.name === 'xlink:href') && !v.startsWith('#')) || v.includes('javascript:') || /url\(\s*['"]?(?!#)/.test(v)) n.removeAttribute(a.name);
     }
   });
   if (!root.getAttribute('viewBox')) root.setAttribute('viewBox', '0 0 400 300');

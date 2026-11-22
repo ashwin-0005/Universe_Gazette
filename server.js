@@ -7,10 +7,36 @@ const FALLBACK_MODEL = 'claude-sonnet-5-5';
 const SVG_MODEL = 'claude-haiku-5-5'; // fast model for the many small drawings
 const PORT = process.env.PORT || 3000;
 
+if (!process.env.ANTHROPIC_API_KEY) console.warn('ANTHROPIC_API_KEY is not set in .env: only the saved editions will work.');
 const client = new Anthropic();
 const app = express();
-app.use(express.json({ limit: '1mb' }));
-app.use(express.static('public'));
+app.disable('x-powered-by');
+
+// Security headers: only our own scripts plus the pinned GSAP CDN may run
+app.use((req, res, next) => {
+  res.set({
+    'Content-Security-Policy': "default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+    'X-Frame-Options': 'DENY',
+  });
+  next();
+});
+app.use(express.json({ limit: '50kb' }));
+app.use(express.static('public', { dotfiles: 'ignore' }));
+
+// Each visitor (by IP) gets a small budget, so nobody on the network can burn the API credits
+function rateLimit(max, windowMs = 60000) {
+  const hits = new Map();
+  setInterval(() => hits.clear(), windowMs).unref();
+  return (req, res, next) => {
+    const n = (hits.get(req.ip) || 0) + 1;
+    hits.set(req.ip, n);
+    if (n > max) return res.status(429).json({ error: 'The presses are overheating. Wait a minute.' });
+    next();
+  };
+}
+const clean = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, max) : '');
 
 const SYSTEM = `You are the editor of a newspaper from a parallel universe. Given a "what if" premise, write that universe's front page.
 Return ONLY valid JSON (no markdown fences, no preamble) matching exactly:
@@ -50,9 +76,11 @@ async function callClaude(model, prompt, system = SYSTEM, max_tokens = 8000) {
   return msg.content.filter(b => b.type === 'text').map(b => b.text).join('');
 }
 
-app.post('/api/generate', async (req, res) => {
-  if (!req.body?.premise) return res.status(400).json({ error: 'premise required' });
-  const prompt = buildPrompt(req.body);
+app.post('/api/generate', rateLimit(8), async (req, res) => {
+  const premise = clean(req.body?.premise, 300);
+  if (!premise) return res.status(400).json({ error: 'premise required' });
+  const prev = req.body.previous_edition;
+  const prompt = buildPrompt({ premise, style: clean(req.body.style, 60), previous_edition: prev && typeof prev === 'object' ? prev : undefined });
   const t0 = Date.now();
   let lastErr;
   // one try on the main model, then the faster fallback (the browser gives up at 50s)
@@ -66,11 +94,12 @@ app.post('/api/generate', async (req, res) => {
       console.error(`${model} failed:`, e.message);
     }
   }
-  res.status(502).json({ error: 'The presses jammed: ' + lastErr?.message });
+  // details stay in the server log; the browser only gets a generic message
+  res.status(502).json({ error: 'The presses jammed. Please try again.' });
 });
 
-app.post('/api/svg', async (req, res) => {
-  const scene = String(req.body?.scene || '').slice(0, 500);
+app.post('/api/svg', rateLimit(50), async (req, res) => {
+  const scene = clean(req.body?.scene, 500);
   if (!scene) return res.status(400).json({ error: 'scene required' });
   for (const model of [SVG_MODEL, FALLBACK_MODEL]) {
     try {
@@ -81,5 +110,8 @@ app.post('/api/svg', async (req, res) => {
   }
   res.status(502).json({ error: 'no svg' });
 });
+
+// Malformed or oversized request bodies: answer plainly, never with a stack trace
+app.use((err, req, res, next) => res.status(err.status === 413 ? 413 : 400).json({ error: 'Bad request' }));
 
 app.listen(PORT, '0.0.0.0', () => console.log(`Gazette on http://localhost:${PORT}`));
